@@ -1,0 +1,5 @@
+textcolor = '#bef'
+hourhand = 'images/hourhand.png'
+minhand = 'images/minhand.png'
+sechand = 'images/sechand.png'
+background = 'images/clockbackground.png'
