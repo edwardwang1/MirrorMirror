@@ -5,14 +5,14 @@ from PyQt4.QtCore import Qt
 import pywapi
 
 
-class Main(QtGui.QMainWindow):
+class Weather(QtGui.QWidget):
     global picWidth
     global picHeight
     picWidth = 128
     picHeight = 128
 
-    def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self)
         self.pix = QtGui.QPixmap("")
         self.pic = QtGui.QLabel(self)
         self.temp = QtGui.QLabel(self)
@@ -105,7 +105,7 @@ class Main(QtGui.QMainWindow):
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    main = Main()
+    main = Weather()
     main.show()
 
     sys.exit(app.exec_())
