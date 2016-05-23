@@ -15,9 +15,7 @@ class ClockandWeather(QtGui.QWidget):
     timeZoneChanged = QtCore.pyqtSignal(int)
 
     ##weather variables
-    global picWidth, picHeight, lastmin
-    picWidth = 128
-    picHeight = 128
+    global lastmin, picDimen
     lastmin = -1
 
     def __init__(self, parent=None):
@@ -57,34 +55,41 @@ class ClockandWeather(QtGui.QWidget):
         # ------------------------------------------------Weather Portion----------------------------------------
         self.weatherFrame = QtGui.QFrame(self)
         self.weatherFrame.move(500, 0)
-        self.weatherPixMap = QtGui.QPixmap("")
+        self.weatherFrame.resize(500, 500)
+
         self.weatherIcon = QtGui.QLabel(self.weatherFrame)
+        self.picDimen = self.weatherFrame.width() * 6 / 10
+        self.weatherIcon.resize(self.picDimen, self.picDimen)
+        self.weatherFrame.setStyleSheet("background-color: ")
+        self.weatherPixMap = QtGui.QPixmap("")
+
         self.temp = QtGui.QLabel(self.weatherFrame)
+        self.temp.setStyleSheet("font-size: 50px;")
         self.weatherDescrip = QtGui.QLabel(self.weatherFrame)
+        self.weatherDescrip.setStyleSheet("font-size: 50px;")
         self.highLowFrame = QtGui.QFrame(self)
         self.high = QtGui.QLabel(self.highLowFrame)
+        self.high.setStyleSheet("font-size: 25px;")
         self.low = QtGui.QLabel(self.highLowFrame)
+        self.low.setStyleSheet("font-size: 25px;")
 
         # setting up grid layout fo weather frame
         self.grid = QtGui.QGridLayout(self.weatherFrame)
-        self.grid.addWidget(self.weatherIcon, 0, 0)
-        self.grid.addWidget(self.temp, 0, 1, QtCore.Qt.AlignLeft)
-        self.grid.addWidget(self.weatherDescrip, 1, 0, QtCore.Qt.AlignCenter)
-        self.grid.addWidget(self.highLowFrame, 1, 1)
+        self.grid.addWidget(self.weatherIcon, 0, 0, 12, 12, QtCore.Qt.AlignBottom)
+        self.grid.addWidget(self.temp, 3, 16, 8, 8, QtCore.Qt.AlignCenter)
+        self.grid.addWidget(self.weatherDescrip, 12, 0, 1, 12, QtCore.Qt.AlignCenter)
+        self.grid.addWidget(self.high, 8, 16, 4, 4, QtCore.Qt.AlignLeft)
+        self.grid.addWidget(self.low, 8, 20, 4, 4, QtCore.Qt.AlignRight)
 
-        # setting up High, Low
-        self.highLowGrid = QtGui.QGridLayout(self.highLowFrame)
-        self.highLowGrid.addWidget(self.high, 0, 0, QtCore.Qt.AlignLeft)
-        self.highLowGrid.addWidget(self.low, 0, 1, QtCore.Qt.AlignRight)
 
         self.Src()
 
         # ---------Window settings --------------------------------
-        self.setGeometry(300, 300, 750, 500)
         self.showFullScreen()
         # self.setWindowFlags(Qt.FramelessWindowHint)
         self.setStyleSheet("background-color: ")
         self.show()
+
 
         ##clock
 
@@ -96,7 +101,7 @@ class ClockandWeather(QtGui.QWidget):
         # Rotate from initial image to avoid cumulative deformation from
         # transformation
         # --------second hand
-        self.secPixMap = QtGui.QPixmap("icons/clockFaceGrid.png")
+        self.secPixMap = QtGui.QPixmap("icons/hourHand.png")
         self.secPixMap = self.secPixMap.scaled(float(self.clockFrame.width()) * 0.6,
                                                float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
         secHandDim = (self.secPixMap.width() ** 2 + self.secPixMap.height() ** 2) ** 0.5
@@ -126,7 +131,7 @@ class ClockandWeather(QtGui.QWidget):
             self.minHand.setPixmap(self.minPixMap)
 
             # ---------hour hand
-            self.hourPixMap = QtGui.QPixmap("icons/hourHand.png")
+            self.hourPixMap = QtGui.QPixmap("icons/clockFaceGrid.png")
             self.hourPixMap = self.hourPixMap.scaled(float(self.clockFrame.width()) * 0.6,
                                                      float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
             hourHandDim = (self.hourPixMap.width() ** 2 + self.hourPixMap.height() ** 2) ** 0.5
@@ -158,9 +163,9 @@ class ClockandWeather(QtGui.QWidget):
         global temp
         global hum
 
-        self.temp.setText(str(int(tempDict['temp'])))
-        self.high.setText(str(int(tempDict['temp_max'])))
-        self.low.setText(str(int(tempDict['temp_min'])))
+        self.temp.setText(str(int(tempDict['temp'])) +  "°C")
+        self.high.setText(str(int(tempDict['temp_max'])) + "°C")
+        self.low.setText(str(int(tempDict['temp_min'])) + "°C")
         self.weatherDescrip.setText(descrip)
 
         self.weatherIcon.show()
@@ -168,33 +173,24 @@ class ClockandWeather(QtGui.QWidget):
 
         if "cloud" in descrip.lower():
             self.weatherPixMap = QtGui.QPixmap("icons/cloudy.png")
-            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
-            self.weatherIcon.setPixmap(self.weatherPixMap)
 
         elif "snow" in descrip.lower():
-            self.weatherPixMap = QtGui.QPixmap("icons/sunny.png")
-            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
-            self.weatherIcon.setPixmap(self.weatherPixMap)
+            self.weatherPixMap = QtGui.QPixmap("icons/snowy.png")
 
         elif "rain" in descrip.lower():
             self.weatherPixMap = QtGui.QPixmap("icons/rainy.png")
-            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
-            self.weatherIcon.setPixmap(self.weatherPixMap)
 
         elif "clear" in descrip.lower():
             self.weatherPixMap = QtGui.QPixmap("icons/clear.png")
-            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
-            self.weatherIcon.setPixmap(self.weatherPixMap)
 
         elif "storm" in descrip.lower():
             self.weatherPixMap = QtGui.QPixmap("icons/stormy.png")
-            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
-            self.weatherIcon.setPixmap(self.weatherPixMap)
 
         elif "mist" in descrip.lower():
             self.weatherPixMap = QtGui.QPixmap("icons/misty.png")
-            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
-            self.weatherIcon.setPixmap(self.weatherPixMap)
+
+        self.weatherPixMap = self.weatherPixMap.scaled(self.picDimen, self.picDimen)
+        self.weatherIcon.setPixmap(self.weatherPixMap)
 
 
 if __name__ == "__main__":
