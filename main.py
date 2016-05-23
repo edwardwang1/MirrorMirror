@@ -3,9 +3,8 @@
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 import sys
-import pywapi
+import pyowm
 import datetime
-import math
 
 
 class ClockandWeather(QtGui.QWidget):
@@ -19,10 +18,12 @@ class ClockandWeather(QtGui.QWidget):
     global picWidth, picHeight, lastmin
     picWidth = 128
     picHeight = 128
+    lastmin = -1
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
         super(ClockandWeather, self).__init__(parent)
+
         # --------------------------------Clock Portion-----------------------------------------
         # Intitialze and set Frame that surrounds clock
         self.clockFrame = QtGui.QFrame(self)
@@ -39,38 +40,49 @@ class ClockandWeather(QtGui.QWidget):
         self.hourHand.setAlignment(QtCore.Qt.AlignCenter)
         self.minHand.setAlignment(QtCore.Qt.AlignCenter)
         self.secHand.setAlignment(QtCore.Qt.AlignCenter)
+        self.hourHand.setStyleSheet("background-color: transparent")
+        self.minHand.setStyleSheet("background-color: transparent")
+        self.secHand.setStyleSheet("background-color: transparent")
 
         # Initialize clock timer
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.tick)
         timer.start(1000)
 
+        # initialize pixmap
+        self.secPixMap = QtGui.QPixmap("")
+        self.minPixMap = QtGui.QPixmap("")
+        self.hourPixMap = QtGui.QPixmap("")
+
         # ------------------------------------------------Weather Portion----------------------------------------
-        self.pix = QtGui.QPixmap("")
-        self.pic = QtGui.QLabel(self)
-        self.temp = QtGui.QLabel(self)
-        self.hum = QtGui.QLabel(self)
-        self.initUI()
+        self.weatherFrame = QtGui.QFrame(self)
+        self.weatherFrame.move(500, 0)
+        self.weatherPixMap = QtGui.QPixmap("")
+        self.weatherIcon = QtGui.QLabel(self.weatherFrame)
+        self.temp = QtGui.QLabel(self.weatherFrame)
+        self.weatherDescrip = QtGui.QLabel(self.weatherFrame)
+        self.highLowFrame = QtGui.QFrame(self)
+        self.high = QtGui.QLabel(self.highLowFrame)
+        self.low = QtGui.QLabel(self.highLowFrame)
 
-    def initUI(self):
-        self.pic.move(90, 110)
-        self.pic.resize(picWidth, picHeight)
-        self.pic.setPixmap(self.pix)
+        # setting up grid layout fo weather frame
+        self.grid = QtGui.QGridLayout(self.weatherFrame)
+        self.grid.addWidget(self.weatherIcon, 0, 0)
+        self.grid.addWidget(self.temp, 0, 1, QtCore.Qt.AlignLeft)
+        self.grid.addWidget(self.weatherDescrip, 1, 0, QtCore.Qt.AlignCenter)
+        self.grid.addWidget(self.highLowFrame, 1, 1)
 
-        self.temp.move(250, 160)
-        self.temp.resize(150, 100)
-        self.temp.setStyleSheet("font-size:50px; font-color: #FFFFFF;")
-
-        self.hum.move(410, 160)
-        self.hum.resize(250, 100)
-        self.hum.setStyleSheet("font-size:50px;")
+        # setting up High, Low
+        self.highLowGrid = QtGui.QGridLayout(self.highLowFrame)
+        self.highLowGrid.addWidget(self.high, 0, 0, QtCore.Qt.AlignLeft)
+        self.highLowGrid.addWidget(self.low, 0, 1, QtCore.Qt.AlignRight)
 
         self.Src()
 
         # ---------Window settings --------------------------------
         self.setGeometry(300, 300, 750, 500)
-        self.setFixedSize(760, 520)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.showFullScreen()
+        # self.setWindowFlags(Qt.FramelessWindowHint)
         self.setStyleSheet("background-color: ")
         self.show()
 
@@ -83,85 +95,106 @@ class ClockandWeather(QtGui.QWidget):
 
         # Rotate from initial image to avoid cumulative deformation from
         # transformation
+        # --------second hand
         self.secPixMap = QtGui.QPixmap("icons/clockFaceGrid.png")
         self.secPixMap = self.secPixMap.scaled(float(self.clockFrame.width()) * 0.6,
                                                float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
         secHandDim = (self.secPixMap.width() ** 2 + self.secPixMap.height() ** 2) ** 0.5
-        self.secHand.setGeometry(self.clockFrame.width() / 2 - secHandDim / 2, self.clockFrame.height() / 2 - secHandDim / 2, secHandDim,
+        self.secHand.setGeometry(self.clockFrame.width() / 2 - secHandDim / 2,
+                                 self.clockFrame.height() / 2 - secHandDim / 2, secHandDim,
                                  secHandDim)
         self.angle = now.second * 6
         transform = QtGui.QTransform().rotate(self.angle)
         self.secPixMap = self.secPixMap.transformed(transform, QtCore.Qt.SmoothTransformation)
 
         # ---- update label ----
-
         self.secHand.setPixmap(self.secPixMap)
 
+        if now.minute != lastmin:
+            lastmin = now.minute
+            # -------minute hand
+            self.minPixMap = QtGui.QPixmap("icons/minHand.png")
+            self.minPixMap = self.minPixMap.scaled(float(self.clockFrame.width()) * 0.6,
+                                                   float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
+            minHandDim = (self.minPixMap.width() ** 2 + self.minPixMap.height() ** 2) ** 0.5
+            self.minHand.setGeometry(self.clockFrame.width() / 2 - minHandDim / 2,
+                                     self.clockFrame.height() / 2 - minHandDim / 2, minHandDim,
+                                     minHandDim)
+            self.angle = now.minute * 6
+            transform = QtGui.QTransform().rotate(self.angle)
+            self.minPixMap = self.minPixMap.transformed(transform, QtCore.Qt.SmoothTransformation)
+            self.minHand.setPixmap(self.minPixMap)
 
-
-        # self.clockFrame.show()
+            # ---------hour hand
+            self.hourPixMap = QtGui.QPixmap("icons/hourHand.png")
+            self.hourPixMap = self.hourPixMap.scaled(float(self.clockFrame.width()) * 0.6,
+                                                     float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
+            hourHandDim = (self.hourPixMap.width() ** 2 + self.hourPixMap.height() ** 2) ** 0.5
+            self.hourHand.setGeometry(self.clockFrame.width() / 2 - hourHandDim / 2,
+                                      self.clockFrame.height() / 2 - hourHandDim / 2, hourHandDim,
+                                      hourHandDim)
+            self.angle = ((now.hour % 12) + now.minute / 60.0) * 30.0
+            transform = QtGui.QTransform().rotate(self.angle)
+            self.hourPixMap = self.hourPixMap.transformed(transform, QtCore.Qt.SmoothTransformation)
+            self.hourHand.setPixmap(self.hourPixMap)
 
     ##Weather
     def Src(self):
-        global text
-        global temp
-        global hum
+        global descrip
+        global tempDict
 
-        location_id = "CAXX0518"  # vancouver ID
+        descrip = "Fair"
 
-        weather_com_result = pywapi.get_weather_from_weather_com(location_id)
-        print(weather_com_result['current_conditions']['text'],
-              weather_com_result['current_conditions']['temperature'] + "°",
-              weather_com_result['current_conditions']['last_updated'],
-              weather_com_result["current_conditions"]["humidity"])
-
-        text = weather_com_result['current_conditions']['text']
-        temp = weather_com_result['current_conditions']['temperature'] + "°C"
-        hum = "☂ " + weather_com_result['current_conditions']['humidity'] + "%"
+        owm = pyowm.OWM('03a8ab2b5c706e0321e66420998f0141')
+        observation = owm.weather_at_place('Vancouver,BC')
+        w = observation.get_weather()
+        tempDict = w.get_temperature('celsius')
+        descrip = w.get_status()
 
         self.Forecast()
 
     def Forecast(self):
-        global text
+        global descrip
         global temp
         global hum
 
-        self.temp.setText(temp)
-        self.hum.setText(hum)
+        self.temp.setText(str(int(tempDict['temp'])))
+        self.high.setText(str(int(tempDict['temp_max'])))
+        self.low.setText(str(int(tempDict['temp_min'])))
+        self.weatherDescrip.setText(descrip)
 
-        self.pic.show()
+        self.weatherIcon.show()
         self.temp.show()
-        self.hum.show()
 
-        if text == "Partly Cloudy" or text == "Fair" or text == "AM Clouds / PM Sun":
-            self.pix = QtGui.QPixmap("icons/partly.png")
-            self.pix = self.pix.scaled(picWidth, picHeight)
-            self.pic.setPixmap(self.pix)
+        if "cloud" in descrip.lower():
+            self.weatherPixMap = QtGui.QPixmap("icons/cloudy.png")
+            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
+            self.weatherIcon.setPixmap(self.weatherPixMap)
 
-        elif text == "Cloudy" or text == "Mostly Cloudy":
-            self.pix = QtGui.QPixmap("icons/cloudy.png")
-            self.pix = self.pix.scaled(picWidth, picHeight)
-            self.pic.setPixmap(self.pix)
+        elif "snow" in descrip.lower():
+            self.weatherPixMap = QtGui.QPixmap("icons/sunny.png")
+            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
+            self.weatherIcon.setPixmap(self.weatherPixMap)
 
-        elif text == "Sunny" or text == "Mostly Sunny":
-            self.pix = QtGui.QPixmap("icons/sunny.png")
-            self.pix = self.pix.scaled(picWidth, picHeight)
-            self.pic.setPixmap(self.pix)
+        elif "rain" in descrip.lower():
+            self.weatherPixMap = QtGui.QPixmap("icons/rainy.png")
+            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
+            self.weatherIcon.setPixmap(self.weatherPixMap)
 
-        elif text == "Showers Early" or text == "Showers" or text == "AM Showers" or text == "Few Showers" or text == "Scattered Showers" or text == "Light Rain Shower":
-            self.pix = QtGui.QPixmap("icons/rainy.png")
-            self.pix = self.pix.scaled(picWidth, picHeight)
-            self.pic.setPixmap(self.pix)
+        elif "clear" in descrip.lower():
+            self.weatherPixMap = QtGui.QPixmap("icons/clear.png")
+            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
+            self.weatherIcon.setPixmap(self.weatherPixMap)
 
-        elif text == "Clear" or text == "Mostly Clear":
-            self.pix = QtGui.QPixmap("icons/clear.png")
-            self.pix = self.pix.scaled(picWidth, picHeight)
-            self.pic.setPixmap(self.pix)
+        elif "storm" in descrip.lower():
+            self.weatherPixMap = QtGui.QPixmap("icons/stormy.png")
+            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
+            self.weatherIcon.setPixmap(self.weatherPixMap)
 
-        elif text == "Isolated T-Storms" or text == "PM T-Storms" or text == "Scattered T-Storms":
-            self.pix = QtGui.QPixmap("icons/stormy.png")
-            self.pix = self.pix.scaled(picWidth, picHeight)
-            self.pic.setPixmap(self.pix)
+        elif "mist" in descrip.lower():
+            self.weatherPixMap = QtGui.QPixmap("icons/misty.png")
+            self.weatherPixMap = self.weatherPixMap.scaled(picWidth, picHeight)
+            self.weatherIcon.setPixmap(self.weatherPixMap)
 
 
 if __name__ == "__main__":
