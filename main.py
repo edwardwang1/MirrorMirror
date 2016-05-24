@@ -4,7 +4,20 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 import sys
 import pyowm
-import datetime
+from datetime import datetime
+import httplib2
+import os
+import oauth2client
+from oauth2client import client
+from oauth2client import tools
+from apiclient import discovery
+import pytz
+
+# If modifying these scopes, delete your previously saved credentials
+# at ~/.credentials/calendar-python-quickstart.json
+SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
+CLIENT_SECRET_FILE = 'client_secret.json'
+APPLICATION_NAME = 'MirrorMirror'
 
 
 class ClockandWeather(QtGui.QWidget):
@@ -73,7 +86,7 @@ class ClockandWeather(QtGui.QWidget):
         self.low = QtGui.QLabel(self.highLowFrame)
         self.low.setStyleSheet("font-size: 25px;")
 
-        # setting up grid layout fo weather frame
+        # setting up grid layout for weather frame
         self.grid = QtGui.QGridLayout(self.weatherFrame)
         self.grid.addWidget(self.weatherIcon, 0, 0, 12, 12, QtCore.Qt.AlignBottom)
         self.grid.addWidget(self.temp, 3, 16, 8, 8, QtCore.Qt.AlignCenter)
@@ -81,8 +94,18 @@ class ClockandWeather(QtGui.QWidget):
         self.grid.addWidget(self.high, 8, 16, 4, 4, QtCore.Qt.AlignLeft)
         self.grid.addWidget(self.low, 8, 20, 4, 4, QtCore.Qt.AlignRight)
 
-
         self.Src()
+
+        # ---------------------------Calendar Portion----------------------------
+        self.calendarFrame = QtGui.QFrame(self)
+        self.calendarFrame.move(1200, 300)
+        self.calendarFrame.setStyleSheet("background-color: white; font-size: 50px;")
+        self.calendarTitle = QtGui.QLabel(self.calendarFrame)
+        self.calendarTitle.setText("Today's Events")
+        self.calendarGrid = QtGui.QGridLayout(self.calendarFrame)
+        self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, 2, QtCore.Qt.AlignCenter)
+        self.eventList = []
+        self.updateCalendar()
 
         # ---------Window settings --------------------------------
         self.showFullScreen()
@@ -91,12 +114,12 @@ class ClockandWeather(QtGui.QWidget):
         self.show()
 
 
-        ##clock
+        ##-----------------------------------clock-------------------------------------------------------
 
     def tick(self):
         global lastmin
         global clockrect
-        now = datetime.datetime.now()
+        now = datetime.now()
 
         # Rotate from initial image to avoid cumulative deformation from
         # transformation
@@ -143,7 +166,7 @@ class ClockandWeather(QtGui.QWidget):
             self.hourPixMap = self.hourPixMap.transformed(transform, QtCore.Qt.SmoothTransformation)
             self.hourHand.setPixmap(self.hourPixMap)
 
-    ##Weather
+    ##-------------------------------------------------Weather------------------------------------------------
     def Src(self):
         global descrip
         global tempDict
@@ -163,7 +186,7 @@ class ClockandWeather(QtGui.QWidget):
         global temp
         global hum
 
-        self.temp.setText(str(int(tempDict['temp'])) +  "°C")
+        self.temp.setText(str(int(tempDict['temp'])) + "°C")
         self.high.setText(str(int(tempDict['temp_max'])) + "°C")
         self.low.setText(str(int(tempDict['temp_min'])) + "°C")
         self.weatherDescrip.setText(descrip)
@@ -191,6 +214,86 @@ class ClockandWeather(QtGui.QWidget):
 
         self.weatherPixMap = self.weatherPixMap.scaled(self.picDimen, self.picDimen)
         self.weatherIcon.setPixmap(self.weatherPixMap)
+
+        # ------------------------------------Calendar-------------------------------------------------
+
+    def get_credentials(self):
+        try:
+            import argparse
+
+            flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
+        except ImportError:
+            flags = None
+        """Gets valid user credentials from storage.
+
+        If nothing has been stored, or if the stored credentials are invalid,
+        the OAuth2 flow is completed to obtain the new credentials.
+
+        Returns:
+            Credentials, the obtained credential.
+        """
+        home_dir = os.path.expanduser('~')
+        credential_dir = os.path.join(home_dir, '.credentials')
+        if not os.path.exists(credential_dir):
+            os.makedirs(credential_dir)
+        credential_path = os.path.join(credential_dir,
+                                       'calendar-python-quickstart.json')
+
+        store = oauth2client.file.Storage(credential_path)
+        credentials = store.get()
+        if not credentials or credentials.invalid:
+            flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
+            flow.user_agent = APPLICATION_NAME
+            if flags:
+                credentials = tools.run_flow(flow, store, flags)
+        return credentials
+
+    def updateCalendar(self):
+        """Shows basic usage of the Google Calendar API.
+
+        Creates a Google Calendar API service object and outputs a list of the next
+        10 events on the user's calendar.
+        """
+        credentials = self.get_credentials()
+        http = credentials.authorize(httplib2.Http())
+        service = discovery.build('calendar', 'v3', http=http)
+
+        # calculates the start and the end of today in UTC
+        tz = pytz.timezone("America/Vancouver")
+        today = datetime.now(tz)
+        midnightPrev = today.replace(hour=00, minute=00, second=00, microsecond=000000)
+        midnightPrev = midnightPrev.astimezone(pytz.timezone("utc")).isoformat()
+        midnightNext = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+        midnightNext = midnightNext.astimezone(pytz.timezone("utc")).isoformat()
+        # now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
+        midnightPrev2 = midnightPrev[:-6] + 'Z'
+        midnightNext2 = midnightNext[:-6] + 'Z'
+
+        print('Getting the upcoming 10 events')
+        eventsResult = service.events().list(
+                calendarId='lauriej.chang@gmail.com', timeMin=midnightPrev2, timeMax=midnightNext2, maxResults=10,
+                singleEvents=True,
+                orderBy='startTime').execute()
+        events = eventsResult.get('items', [])
+        self.calendarFrame.resize(500, (len(events) + 1) * 100)
+        self.eventList.clear()
+        self.eventList = [[0 for x in range(2)] for y in range(len(events))]
+        print(self.eventList)
+
+        if not events:
+            print('No upcoming events found.')
+
+        for index, event in enumerate(events, start=0):
+            self.eventList[index][0] = QtGui.QLabel(self.calendarFrame)
+            self.eventList[index][1] = QtGui.QLabel(self.calendarFrame)
+            start = event['start'].get('dateTime', event['start'].get('date'))
+            start24 = start[11:16]
+            d = datetime.strptime(start24, "%H:%M")
+            start12 = d.strftime("%I:%M %p")
+            self.eventList[index][0].setText(start12)
+            self.eventList[index][1].setText(event['summary'])
+            self.calendarGrid.addWidget(self.eventList[index][0], index + 1, 0, 1, 1, QtCore.Qt.AlignLeft)
+            self.calendarGrid.addWidget(self.eventList[index][1], index + 1, 1, 1, 1, QtCore.Qt.AlignRight)
 
 
 if __name__ == "__main__":
