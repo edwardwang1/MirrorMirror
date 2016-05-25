@@ -84,6 +84,7 @@ def main():
         print('No upcoming events found.')
     for index, event in enumerate(events, start = 0):
         print(index, type(event))
+        print(type(event['start']))
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(start, event['summary'])
 

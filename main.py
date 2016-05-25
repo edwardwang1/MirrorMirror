@@ -12,6 +12,8 @@ from oauth2client import client
 from oauth2client import tools
 from apiclient import discovery
 import pytz
+import calendar
+import messages
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/calendar-python-quickstart.json
@@ -99,11 +101,12 @@ class ClockandWeather(QtGui.QWidget):
         # ---------------------------Calendar Portion----------------------------
         self.calendarFrame = QtGui.QFrame(self)
         self.calendarFrame.move(1200, 300)
-        self.calendarFrame.setStyleSheet("background-color: white; font-size: 50px;")
+        self.calendarFrame.setStyleSheet("background-color: transparent; font-size: 30px;")
         self.calendarTitle = QtGui.QLabel(self.calendarFrame)
-        self.calendarTitle.setText("Today's Events")
+        #self.calendarTitle.setText("Today's Events")
+        self.calendarTitle.setStyleSheet("font-size: 50px")
         self.calendarGrid = QtGui.QGridLayout(self.calendarFrame)
-        self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, 2, QtCore.Qt.AlignCenter)
+        self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, 3, QtCore.Qt.AlignCenter)
         self.eventList = []
         self.updateCalendar()
 
@@ -124,7 +127,7 @@ class ClockandWeather(QtGui.QWidget):
         # Rotate from initial image to avoid cumulative deformation from
         # transformation
         # --------second hand
-        self.secPixMap = QtGui.QPixmap("icons/hourHand.png")
+        self.secPixMap = QtGui.QPixmap("icons/hourHand.png", "1")
         self.secPixMap = self.secPixMap.scaled(float(self.clockFrame.width()) * 0.6,
                                                float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
         secHandDim = (self.secPixMap.width() ** 2 + self.secPixMap.height() ** 2) ** 0.5
@@ -141,7 +144,7 @@ class ClockandWeather(QtGui.QWidget):
         if now.minute != lastmin:
             lastmin = now.minute
             # -------minute hand
-            self.minPixMap = QtGui.QPixmap("icons/minHand.png")
+            self.minPixMap = QtGui.QPixmap("icons/minHand.png", "1")
             self.minPixMap = self.minPixMap.scaled(float(self.clockFrame.width()) * 0.6,
                                                    float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
             minHandDim = (self.minPixMap.width() ** 2 + self.minPixMap.height() ** 2) ** 0.5
@@ -154,7 +157,7 @@ class ClockandWeather(QtGui.QWidget):
             self.minHand.setPixmap(self.minPixMap)
 
             # ---------hour hand
-            self.hourPixMap = QtGui.QPixmap("icons/clockFaceGrid.png")
+            self.hourPixMap = QtGui.QPixmap("icons/clockFaceGrid.png", "1")
             self.hourPixMap = self.hourPixMap.scaled(float(self.clockFrame.width()) * 0.6,
                                                      float(self.clockFrame.height()) * 0.6, Qt.KeepAspectRatio)
             hourHandDim = (self.hourPixMap.width() ** 2 + self.hourPixMap.height() ** 2) ** 0.5
@@ -195,22 +198,22 @@ class ClockandWeather(QtGui.QWidget):
         self.temp.show()
 
         if "cloud" in descrip.lower():
-            self.weatherPixMap = QtGui.QPixmap("icons/cloudy.png")
+            self.weatherPixMap = QtGui.QPixmap("icons/cloudy.png", "1")
 
         elif "snow" in descrip.lower():
-            self.weatherPixMap = QtGui.QPixmap("icons/snowy.png")
+            self.weatherPixMap = QtGui.QPixmap("icons/snowy.png", "1")
 
         elif "rain" in descrip.lower():
-            self.weatherPixMap = QtGui.QPixmap("icons/rainy.png")
+            self.weatherPixMap = QtGui.QPixmap("icons/rainy.png", "1")
 
         elif "clear" in descrip.lower():
-            self.weatherPixMap = QtGui.QPixmap("icons/clear.png")
+            self.weatherPixMap = QtGui.QPixmap("icons/clear.png", "1")
 
         elif "storm" in descrip.lower():
-            self.weatherPixMap = QtGui.QPixmap("icons/stormy.png")
+            self.weatherPixMap = QtGui.QPixmap("icons/stormy.png", "1")
 
         elif "mist" in descrip.lower():
-            self.weatherPixMap = QtGui.QPixmap("icons/misty.png")
+            self.weatherPixMap = QtGui.QPixmap("icons/misty.png", "1")
 
         self.weatherPixMap = self.weatherPixMap.scaled(self.picDimen, self.picDimen)
         self.weatherIcon.setPixmap(self.weatherPixMap)
@@ -269,15 +272,18 @@ class ClockandWeather(QtGui.QWidget):
         midnightPrev2 = midnightPrev[:-6] + 'Z'
         midnightNext2 = midnightNext[:-6] + 'Z'
 
-        print('Getting the upcoming 10 events')
+        weekday = calendar.day_name[today.weekday()]
+        month = calendar.month_name[today.month]
+        day =  today.day
+        self.calendarTitle.setText(weekday + ", " + month + " " + str(day))
         eventsResult = service.events().list(
                 calendarId='lauriej.chang@gmail.com', timeMin=midnightPrev2, timeMax=midnightNext2, maxResults=10,
                 singleEvents=True,
                 orderBy='startTime').execute()
         events = eventsResult.get('items', [])
-        self.calendarFrame.resize(500, (len(events) + 1) * 100)
+        self.calendarFrame.resize(500, len(events) * 65 + 150)
         self.eventList.clear()
-        self.eventList = [[0 for x in range(2)] for y in range(len(events))]
+        self.eventList = [[0 for x in range(3)] for y in range(len(events))]
         print(self.eventList)
 
         if not events:
@@ -286,14 +292,25 @@ class ClockandWeather(QtGui.QWidget):
         for index, event in enumerate(events, start=0):
             self.eventList[index][0] = QtGui.QLabel(self.calendarFrame)
             self.eventList[index][1] = QtGui.QLabel(self.calendarFrame)
+            self.eventList[index][2] = QtGui.QLabel(self.calendarFrame)
+            # self.eventList[index][0].setStyleSheet("font-size: 30px;")
+            # self.eventList[index][1].setStyleSheet("font-size: 30px;")
+            # self.eventList[index][2].setStyleSheet("font-size: 30px;")
             start = event['start'].get('dateTime', event['start'].get('date'))
             start24 = start[11:16]
-            d = datetime.strptime(start24, "%H:%M")
-            start12 = d.strftime("%I:%M %p")
-            self.eventList[index][0].setText(start12)
-            self.eventList[index][1].setText(event['summary'])
-            self.calendarGrid.addWidget(self.eventList[index][0], index + 1, 0, 1, 1, QtCore.Qt.AlignLeft)
-            self.calendarGrid.addWidget(self.eventList[index][1], index + 1, 1, 1, 1, QtCore.Qt.AlignRight)
+            dstart = datetime.strptime(start24, "%H:%M")
+            start12 = dstart.strftime("%I:%M %p")
+            end = event['end'].get('dateTime', event['end'].get('date'))
+            end24 = end[11:16]
+            dend = datetime.strptime(end24, "%H:%M")
+            end12 = dend.strftime("%I:%M %p")
+            self.eventList[index][0].setText(start12 + "-")
+            self.eventList[index][1].setText(" " + end12)
+            self.eventList[index][2].setWordWrap(True);
+            self.eventList[index][2].setText(event['summary'])
+            self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 1, 1, QtCore.Qt.AlignBottom)
+            self.calendarGrid.addWidget(self.eventList[index][1], index * 2 + 2, 0, 1, 1, QtCore.Qt.AlignTop)
+            self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
 
 
 if __name__ == "__main__":
