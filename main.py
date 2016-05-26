@@ -5,15 +5,15 @@ from PyQt4.QtCore import Qt
 import sys
 import pyowm
 from datetime import datetime
-import httplib2
+#import httplib2
 import os
-import oauth2client
-from oauth2client import client
-from oauth2client import tools
-from apiclient import discovery
+#import oauth2client
+#from oauth2client import client
+#from oauth2client import tools
+#from apiclient import discovery
 import pytz
 import calendar
-import messages
+#import messages
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/calendar-python-quickstart.json
@@ -97,7 +97,7 @@ class ClockandWeather(QtGui.QWidget):
         self.grid.addWidget(self.low, 8, 20, 4, 4, QtCore.Qt.AlignRight)
 
         self.Src()
-
+        '''
         # ---------------------------Calendar Portion----------------------------
         self.calendarFrame = QtGui.QFrame(self)
         self.calendarFrame.move(1200, 300)
@@ -109,7 +109,7 @@ class ClockandWeather(QtGui.QWidget):
         self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, 3, QtCore.Qt.AlignCenter)
         self.eventList = []
         self.updateCalendar()
-
+        '''
         # ---------Window settings --------------------------------
         self.showFullScreen()
         # self.setWindowFlags(Qt.FramelessWindowHint)
@@ -217,7 +217,7 @@ class ClockandWeather(QtGui.QWidget):
 
         self.weatherPixMap = self.weatherPixMap.scaled(self.picDimen, self.picDimen)
         self.weatherIcon.setPixmap(self.weatherPixMap)
-
+        '''
         # ------------------------------------Calendar-------------------------------------------------
 
     def get_credentials(self):
@@ -311,7 +311,7 @@ class ClockandWeather(QtGui.QWidget):
             self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 1, 1, QtCore.Qt.AlignBottom)
             self.calendarGrid.addWidget(self.eventList[index][1], index * 2 + 2, 0, 1, 1, QtCore.Qt.AlignTop)
             self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
-
+        '''
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)

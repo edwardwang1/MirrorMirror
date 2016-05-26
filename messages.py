@@ -5,4 +5,5 @@ import re
 file = open('disneyquotes', 'r')
 document = file.read()
 print(type(file.read()))
-quote = re.findall('',file)
+#quote = re.findall('',file)
+print(document)
