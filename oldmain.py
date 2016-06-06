@@ -23,44 +23,25 @@ CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'MirrorMirror'
 
 
-class Display(QtGui.QWidget):
-    global lastmin
-    lastmin = -1
-
-    def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self)
-        super(Display, self).__init__(parent)
-
-        clock = Clock(self)
-        weather = Weather(self)
-        calendar = Calendar(self)
-        message = Message(self)
-
-        self.mainLayout = QtGui.QGridLayout(self)
-        self.mainLayout.addWidget(clock, 0, 0, 1, 1)
-        self.mainLayout.addWidget(calendar, 0, 1, 1, 1)
-        self.mainLayout.addWidget(weather, 1, 0, 1, 1)
-        self.mainLayout.addWidget(message, 1, 1, 1, 1)
-
-        self.showFullScreen()
-        # self.setWindowFlags(Qt.FramelessWindowHint)
-        self.setStyleSheet("background-color: ")
-        self.show()
-
-
-class Clock(QtGui.QWidget):
+class ClockandWeather(QtGui.QWidget):
+    ##clock variables
     # Emitted when the clock's time changes.
     timeChanged = QtCore.pyqtSignal(QtCore.QTime)
     # Emitted when the clock's time zone changes.
     timeZoneChanged = QtCore.pyqtSignal(int)
 
-    def __init__(self, parent):
-        QtGui.QWidget.__init__(parent)
-        super(Clock, self).__init__(parent)
+    ##weather variables
+    global lastmin, picDimen
+    lastmin = -1
+
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self)
+        super(ClockandWeather, self).__init__(parent)
 
         # --------------------------------Clock Portion-----------------------------------------
         # Intitialze and set Frame that surrounds clock
         self.clockFrame = QtGui.QFrame(self)
+        self.clockFrame.move(200, 200)
         self.clockFrame.resize(300, 300)
         self.clockFrame.setObjectName("clockFrame")
         self.clockFrame.setStyleSheet(
@@ -86,6 +67,63 @@ class Clock(QtGui.QWidget):
         self.secPixMap = QtGui.QPixmap("")
         self.minPixMap = QtGui.QPixmap("")
         self.hourPixMap = QtGui.QPixmap("")
+
+        # ------------------------------------------------Weather Portion----------------------------------------
+        self.weatherFrame = QtGui.QFrame(self)
+        self.weatherFrame.move(500, 0)
+        self.weatherFrame.resize(500, 500)
+
+        self.weatherIcon = QtGui.QLabel(self.weatherFrame)
+        self.picDimen = self.weatherFrame.width() * 6 / 10
+        self.weatherIcon.resize(self.picDimen, self.picDimen)
+        self.weatherFrame.setStyleSheet("background-color: ")
+        self.weatherPixMap = QtGui.QPixmap("")
+
+        self.temp = QtGui.QLabel(self.weatherFrame)
+        self.temp.setStyleSheet("font-size: 50px;")
+        self.weatherDescrip = QtGui.QLabel(self.weatherFrame)
+        self.weatherDescrip.setStyleSheet("font-size: 50px;")
+        self.highLowFrame = QtGui.QFrame(self)
+        self.high = QtGui.QLabel(self.highLowFrame)
+        self.high.setStyleSheet("font-size: 25px;")
+        self.low = QtGui.QLabel(self.highLowFrame)
+        self.low.setStyleSheet("font-size: 25px;")
+
+        # setting up grid layout for weather frame
+        self.grid = QtGui.QGridLayout(self.weatherFrame)
+        self.grid.addWidget(self.weatherIcon, 0, 0, 12, 12, QtCore.Qt.AlignBottom)
+        self.grid.addWidget(self.temp, 3, 16, 8, 8, QtCore.Qt.AlignCenter)
+        self.grid.addWidget(self.weatherDescrip, 12, 0, 1, 12, QtCore.Qt.AlignCenter)
+        self.grid.addWidget(self.high, 8, 16, 4, 4, QtCore.Qt.AlignLeft)
+        self.grid.addWidget(self.low, 8, 20, 4, 4, QtCore.Qt.AlignRight)
+
+        self.Src()
+
+        # ---------------------------Calendar Portion----------------------------
+        self.calendarFrame = QtGui.QFrame(self)
+        self.calendarFrame.move(1200, 300)
+        self.calendarFrame.setStyleSheet("background-color: transparent; font-size: 30px;")
+        self.calendarTitle = QtGui.QLabel(self.calendarFrame)
+        self.calendarTitle.setStyleSheet("font-size: 50px")
+        self.calendarGrid = QtGui.QGridLayout(self.calendarFrame)
+        self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, 3, QtCore.Qt.AlignCenter)
+        self.eventList = []
+        self.updateCalendar()
+
+        # ------------------------Message Portion---------------------------------
+        self.message = QtGui.QLabel(self)
+        self.message.setStyleSheet("font-size: 30px")
+        self.message.move(300, 800)
+        self.updateMessage()
+
+        # ---------Window settings --------------------------------
+        self.showFullScreen()
+        # self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setStyleSheet("background-color: ")
+        self.show()
+
+
+        ##-----------------------------------clock-------------------------------------------------------
 
     def tick(self):
         global lastmin
@@ -137,41 +175,7 @@ class Clock(QtGui.QWidget):
             self.hourPixMap = self.hourPixMap.transformed(transform, QtCore.Qt.SmoothTransformation)
             self.hourHand.setPixmap(self.hourPixMap)
 
-
-class Weather(QtGui.QWidget):
-    def __init__(self, parent):
-        QtGui.QWidget.__init__(parent)
-        super(Weather, self).__init__(parent)
-
-        self.weatherFrame = QtGui.QFrame(self)
-        self.weatherFrame.resize(500, 500)
-
-        self.weatherIcon = QtGui.QLabel(self.weatherFrame)
-        self.picDimen = self.weatherFrame.width() * 6 / 10
-        self.weatherIcon.resize(self.picDimen, self.picDimen)
-        self.weatherFrame.setStyleSheet("background-color: ")
-        self.weatherPixMap = QtGui.QPixmap("")
-
-        self.temp = QtGui.QLabel(self.weatherFrame)
-        self.temp.setStyleSheet("font-size: 50px;")
-        self.weatherDescrip = QtGui.QLabel(self.weatherFrame)
-        self.weatherDescrip.setStyleSheet("font-size: 50px;")
-        self.highLowFrame = QtGui.QFrame(self)
-        self.high = QtGui.QLabel(self.highLowFrame)
-        self.high.setStyleSheet("font-size: 25px;")
-        self.low = QtGui.QLabel(self.highLowFrame)
-        self.low.setStyleSheet("font-size: 25px;")
-
-        # setting up grid layout for weather frame
-        self.grid = QtGui.QGridLayout(self.weatherFrame)
-        self.grid.addWidget(self.weatherIcon, 0, 0, 12, 12, QtCore.Qt.AlignBottom)
-        self.grid.addWidget(self.temp, 3, 16, 8, 8, QtCore.Qt.AlignCenter)
-        self.grid.addWidget(self.weatherDescrip, 12, 0, 1, 12, QtCore.Qt.AlignCenter)
-        self.grid.addWidget(self.high, 8, 16, 4, 4, QtCore.Qt.AlignLeft)
-        self.grid.addWidget(self.low, 8, 20, 4, 4, QtCore.Qt.AlignRight)
-
-        self.Src()
-
+    ##-------------------------------------------------Weather------------------------------------------------
     def Src(self):
         global descrip
         global tempDict
@@ -220,20 +224,7 @@ class Weather(QtGui.QWidget):
         self.weatherPixMap = self.weatherPixMap.scaled(self.picDimen, self.picDimen)
         self.weatherIcon.setPixmap(self.weatherPixMap)
 
-
-class Calendar(QtGui.QWidget):
-    def __init__(self, parent):
-        QtGui.QWidget.__init__(parent)
-        super(Calendar, self).__init__(parent)
-
-        self.calendarFrame = QtGui.QFrame(self)
-        self.calendarFrame.setStyleSheet("background-color: transparent; font-size: 30px;")
-        self.calendarTitle = QtGui.QLabel(self.calendarFrame)
-        self.calendarTitle.setStyleSheet("font-size: 50px")
-        self.calendarGrid = QtGui.QGridLayout(self.calendarFrame)
-        self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, 3, QtCore.Qt.AlignCenter)
-        self.eventList = []
-        self.updateCalendar()
+        # ------------------------------------Calendar-------------------------------------------------
 
     def get_credentials(self):
         try:
@@ -299,6 +290,7 @@ class Calendar(QtGui.QWidget):
         self.calendarFrame.resize(500, len(events) * 65 + 150)
         self.eventList.clear()
         self.eventList = [[0 for x in range(3)] for y in range(len(events))]
+        print(self.eventList)
 
         if not events:
             print('No upcoming events found.')
@@ -323,21 +315,11 @@ class Calendar(QtGui.QWidget):
             end12 = dend.strftime("%I:%M %p")
             self.eventList[index][0].setText(start12 + "-")
             self.eventList[index][1].setText(" " + end12)
-            self.eventList[index][2].setWordWrap(True)
+            self.eventList[index][2].setWordWrap(True);
             self.eventList[index][2].setText(event['summary'])
             self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 1, 1, QtCore.Qt.AlignBottom)
             self.calendarGrid.addWidget(self.eventList[index][1], index * 2 + 2, 0, 1, 1, QtCore.Qt.AlignTop)
             self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
-
-
-class Message(QtGui.QWidget):
-    def __init__(self, parent):
-        QtGui.QWidget.__init__(parent)
-        super(Message, self).__init__(parent)
-
-        self.message = QtGui.QLabel(self)
-        self.message.setStyleSheet("font-size: 30px")
-        self.updateMessage()
 
     def updateMessage(self):
         file = open('disneyquotes.txt', 'r')
@@ -346,14 +328,13 @@ class Message(QtGui.QWidget):
         random.seed()
         quotes = expression.findall(document)
         index = random.randint(0, len(quotes) - 1)
-        self.message.setWordWrap(True)
         self.message.setText(quotes[index])
         self.message.show()
 
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    main = Display()
+    main = ClockandWeather()
     main.show()
 
     sys.exit(app.exec_())
