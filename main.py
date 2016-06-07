@@ -64,7 +64,7 @@ class Clock(QtGui.QWidget):
         self.clockFrame.resize(300, 300)
         self.clockFrame.setObjectName("clockFrame")
         self.clockFrame.setStyleSheet(
-                "#clockFrame {background-color: transparent; border-image: url('icons/clockFace.png');}")
+            "#clockFrame {background-color: transparent; border-image: url('icons/clockFace.png');}")
 
         # Initialize variables for clock hands
         self.hourHand = QtGui.QLabel(self.clockFrame)
@@ -292,16 +292,15 @@ class Calendar(QtGui.QWidget):
         day = today.day
         self.calendarTitle.setText(weekday + ", " + month + " " + str(day))
         eventsResult = service.events().list(
-                calendarId='lauriej.chang@gmail.com', timeMin=midnightPrev2, timeMax=midnightNext2, maxResults=10,
-                singleEvents=True,
-                orderBy='startTime').execute()
+            calendarId='lauriej.chang@gmail.com', timeMin=midnightPrev2, timeMax=midnightNext2, maxResults=10,
+            singleEvents=True,
+            orderBy='startTime').execute()
         events = eventsResult.get('items', [])
         self.calendarFrame.resize(500, len(events) * 65 + 150)
         self.eventList.clear()
         self.eventList = [[0 for x in range(3)] for y in range(len(events))]
 
         if not events:
-            print('No upcoming events found.')
             self.eventList.append(QtGui.QLabel(self.calendarFrame))
             self.eventList[0].setText("No Events Today, Hooray!")
             self.calendarGrid.addWidget(self.eventList[0], 1, 0, 1, 3, QtCore.Qt.AlignCenter)
@@ -310,24 +309,30 @@ class Calendar(QtGui.QWidget):
             self.eventList[index][0] = QtGui.QLabel(self.calendarFrame)
             self.eventList[index][1] = QtGui.QLabel(self.calendarFrame)
             self.eventList[index][2] = QtGui.QLabel(self.calendarFrame)
-            # self.eventList[index][0].setStyleSheet("font-size: 30px;")
-            # self.eventList[index][1].setStyleSheet("font-size: 30px;")
-            # self.eventList[index][2].setStyleSheet("font-size: 30px;")
             start = event['start'].get('dateTime', event['start'].get('date'))
-            start24 = start[11:16]
-            dstart = datetime.strptime(start24, "%H:%M")
-            start12 = dstart.strftime("%I:%M %p")
-            end = event['end'].get('dateTime', event['end'].get('date'))
-            end24 = end[11:16]
-            dend = datetime.strptime(end24, "%H:%M")
-            end12 = dend.strftime("%I:%M %p")
-            self.eventList[index][0].setText(start12 + "-")
-            self.eventList[index][1].setText(" " + end12)
-            self.eventList[index][2].setWordWrap(True)
-            self.eventList[index][2].setText(event['summary'])
-            self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 1, 1, QtCore.Qt.AlignBottom)
-            self.calendarGrid.addWidget(self.eventList[index][1], index * 2 + 2, 0, 1, 1, QtCore.Qt.AlignTop)
-            self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
+            if len(start)<= 10:
+                self.eventList[index][0].setText( "All Day")
+                self.eventList[index][1].setText(" ")
+                self.eventList[index][2].setWordWrap(True)
+                self.eventList[index][2].setText(event['summary'])
+                self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 2, 1, QtCore.Qt.AlignCenter)
+                self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
+
+            else:
+                start24 = start[11:16]
+                dstart = datetime.strptime(start24, "%H:%M")
+                start12 = dstart.strftime("%I:%M %p")
+                end = event['end'].get('dateTime', event['end'].get('date'))
+                end24 = end[11:16]
+                dend = datetime.strptime(end24, "%H:%M")
+                end12 = dend.strftime("%I:%M %p")
+                self.eventList[index][0].setText(start12 + "-")
+                self.eventList[index][1].setText(" " + end12)
+                self.eventList[index][2].setWordWrap(True)
+                self.eventList[index][2].setText(event['summary'])
+                self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 1, 1, QtCore.Qt.AlignBottom)
+                self.calendarGrid.addWidget(self.eventList[index][1], index * 2 + 2, 0, 1, 1, QtCore.Qt.AlignTop)
+                self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
 
 
 class Message(QtGui.QWidget):
