@@ -36,6 +36,7 @@ class Display(QtGui.QWidget):
         calendar = Calendar(self)
         message = Message(self)
 
+
         self.mainLayout = QtGui.QGridLayout(self)
         self.mainLayout.addWidget(clock, 0, 0, 1, 1)
         self.mainLayout.addWidget(calendar, 0, 1, 1, 1)
@@ -44,7 +45,7 @@ class Display(QtGui.QWidget):
 
         self.showFullScreen()
         # self.setWindowFlags(Qt.FramelessWindowHint)
-        self.setStyleSheet("background-color: ")
+        self.setStyleSheet("background-color: black ")
         self.show()
 
 
@@ -149,18 +150,17 @@ class Weather(QtGui.QWidget):
         self.weatherIcon = QtGui.QLabel(self.weatherFrame)
         self.picDimen = self.weatherFrame.width() * 6 / 10
         self.weatherIcon.resize(self.picDimen, self.picDimen)
-        self.weatherFrame.setStyleSheet("background-color: ")
         self.weatherPixMap = QtGui.QPixmap("")
 
         self.temp = QtGui.QLabel(self.weatherFrame)
-        self.temp.setStyleSheet("font-size: 50px;")
+        self.temp.setStyleSheet("font-size: 50px; color: white;")
         self.weatherDescrip = QtGui.QLabel(self.weatherFrame)
-        self.weatherDescrip.setStyleSheet("font-size: 50px;")
+        self.weatherDescrip.setStyleSheet("font-size: 50px; color: white;")
         self.highLowFrame = QtGui.QFrame(self)
         self.high = QtGui.QLabel(self.highLowFrame)
-        self.high.setStyleSheet("font-size: 25px;")
+        self.high.setStyleSheet("font-size: 25px; color: white;")
         self.low = QtGui.QLabel(self.highLowFrame)
-        self.low.setStyleSheet("font-size: 25px;")
+        self.low.setStyleSheet("font-size: 25px; color: white;")
 
         # setting up grid layout for weather frame
         self.grid = QtGui.QGridLayout(self.weatherFrame)
@@ -222,16 +222,18 @@ class Weather(QtGui.QWidget):
 
 
 class Calendar(QtGui.QWidget):
+    global descriptionWidth
+    descriptionWidth = 4
     def __init__(self, parent):
         QtGui.QWidget.__init__(parent)
         super(Calendar, self).__init__(parent)
 
         self.calendarFrame = QtGui.QFrame(self)
-        self.calendarFrame.setStyleSheet("background-color: transparent; font-size: 30px;")
+        self.calendarFrame.setStyleSheet("background-color: transparent; font-size: 30px; color: white;")
         self.calendarTitle = QtGui.QLabel(self.calendarFrame)
-        self.calendarTitle.setStyleSheet("font-size: 50px")
+        self.calendarTitle.setStyleSheet("font-size: 50px; color: white;")
         self.calendarGrid = QtGui.QGridLayout(self.calendarFrame)
-        self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, 3, QtCore.Qt.AlignCenter)
+        self.calendarGrid.addWidget(self.calendarTitle, 0, 0, 1, descriptionWidth + 1, QtCore.Qt.AlignCenter)
         self.eventList = []
         self.updateCalendar()
 
@@ -296,7 +298,7 @@ class Calendar(QtGui.QWidget):
             singleEvents=True,
             orderBy='startTime').execute()
         events = eventsResult.get('items', [])
-        self.calendarFrame.resize(500, len(events) * 65 + 150)
+        self.calendarFrame.resize(550, len(events) * 65 + 150)
         self.eventList.clear()
         self.eventList = [[0 for x in range(3)] for y in range(len(events))]
 
@@ -316,7 +318,7 @@ class Calendar(QtGui.QWidget):
                 self.eventList[index][2].setWordWrap(True)
                 self.eventList[index][2].setText(event['summary'])
                 self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 2, 1, QtCore.Qt.AlignCenter)
-                self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
+                self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, descriptionWidth, QtCore.Qt.AlignLeft)
 
             else:
                 start24 = start[11:16]
@@ -332,7 +334,7 @@ class Calendar(QtGui.QWidget):
                 self.eventList[index][2].setText(event['summary'])
                 self.calendarGrid.addWidget(self.eventList[index][0], index * 2 + 1, 0, 1, 1, QtCore.Qt.AlignBottom)
                 self.calendarGrid.addWidget(self.eventList[index][1], index * 2 + 2, 0, 1, 1, QtCore.Qt.AlignTop)
-                self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, 2, QtCore.Qt.AlignLeft)
+                self.calendarGrid.addWidget(self.eventList[index][2], index * 2 + 1, 1, 2, descriptionWidth, QtCore.Qt.AlignLeft)
 
 
 class Message(QtGui.QWidget):
@@ -341,7 +343,7 @@ class Message(QtGui.QWidget):
         super(Message, self).__init__(parent)
 
         self.message = QtGui.QLabel(self)
-        self.message.setStyleSheet("font-size: 30px")
+        self.message.setStyleSheet("font-size: 30px; color: white;")
         self.updateMessage()
 
     def updateMessage(self):
